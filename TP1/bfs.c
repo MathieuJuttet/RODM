@@ -1,28 +1,3 @@
-/*
-Maximilien Danisch
-September 2017
-http://bit.ly/danisch
-maximilien.danisch@gmail.com
-
-Info:
-Feel free to use these lines as you wish. This program loads a graph in main memory.
-
-To compile:
-"gcc adjlist.c -O9 -o adjlist".
-
-To execute:
-"./adjlist edgelist.txt".
-"edgelist.txt" should contain the graph: one edge on each line (two unsigned long (nodes' ID)) separated by a space.
-The prograph will load the graph in main memory and then terminate.
-
-Note:
-If the graph is directed (and weighted) with selfloops and you want to make it undirected unweighted without selfloops, use the following linux command line.
-awk '{if ($1<$2) print $1" "$2;else if ($2<$1) print $2" "$1}' net.txt | sort -n -k1,2 -u > net2.txt
-
-Performance:
-Up to 200 million edges on my laptop with 8G of RAM: takes more or less 4G of RAM and 30 seconds (I have an SSD hardrive) for 100M edges.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -46,7 +21,7 @@ typedef struct {
 } adjlist;
 
 //compute the maximum of three unsigned long
-inline unsigned long max3(unsigned long a,unsigned long b,unsigned long c){
+unsigned long max3(unsigned long a,unsigned long b,unsigned long c){
 	a=(a>b) ? a : b;
 	return (a>c) ? a : c;
 }
@@ -132,10 +107,12 @@ typedef struct {
 
 
 
-inline unsigned long max_long(unsigned long a, unsigned long b) {
+unsigned long max_long(unsigned long a, unsigned long b) {
   return a > b ? a : b;
 }
-
+unsigned long min_long(unsigned long a, unsigned long b) {
+  return a > b ? b : a;
+}
 
 queue *init_q(unsigned long s){ 
 	queue *q = malloc(sizeof(*q));
@@ -167,6 +144,7 @@ unsigned long pop_queue(queue *q){
 
 typedef struct {
 	unsigned long node_number;
+	unsigned long *visited_nodes_number;
 	int distance;
 } bfs_result;
 
@@ -176,6 +154,7 @@ bfs_result bfs(adjlist *graph, unsigned long start_node) {
 
 	queue *q = init_q(start_node);
 	bool *visited_nodes = calloc(graph->n,sizeof(bool)); 
+	unsigned long *visited_nodes_number = calloc(graph->n,sizeof(unsigned long)); 
 	int *distance = calloc(graph->n, sizeof(int)); 
 	bfs_result result; 
 	result.distance = 0;
@@ -183,7 +162,8 @@ bfs_result bfs(adjlist *graph, unsigned long start_node) {
 	
 	
 	visited_nodes[start_node] = 1;
-
+	visited_nodes_number[0] = start_node;
+	unsigned long counter = 1;
 	while (q->first != NULL) {  
 		unsigned long node_to_pop = q->first->value;
 		unsigned long degree = graph->cd[node_to_pop+1] - graph->cd[node_to_pop]; 
@@ -202,7 +182,8 @@ bfs_result bfs(adjlist *graph, unsigned long start_node) {
 				visited_nodes[neighbor] = 1;
 			}
 		}
-		pop_queue(q);
+		visited_nodes_number[counter] =  pop_queue(q);
+		counter = counter + 1;
 	}
 
 	free(visited_nodes);
@@ -226,6 +207,18 @@ int low_bd_estimate(adjlist *graph, int alpha) {
 }
 
 
+int up_bd_estimate(adjlist *graph, int alpha) { 
+
+	int bound = 0;
+
+	for (int i=0;i<alpha;i++) {
+		unsigned long w = rand() % (graph->n);
+		unsigned long bound_test = bfs(graph, w).distance;
+		bound = max_long(bound, bound_test);
+	}
+	return bound*2;
+}
+
 int main(int argc,char** argv){
 	adjlist* graph;
 	time_t t1,t2;
@@ -246,6 +239,13 @@ int main(int argc,char** argv){
 	t2=time(NULL);
 	t2 = t2-t1;
 	printf("- Time for lower bound = %ldh%ldm%lds\n",t2/3600,t2%3600/60,t2%60);
+
+
+	t1=time(NULL);
+	printf("Upper bound : %d with alpha = %d\n", up_bd_estimate(graph, 10), 10); 
+	t2=time(NULL);
+	t2 = t2-t1;
+	printf("- Time for upper bound = %ldh%ldm%lds\n",t2/3600,t2%3600/60,t2%60);
 
 	free_adjlist(graph); 
 	return 0;

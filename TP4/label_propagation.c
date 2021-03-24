@@ -58,26 +58,6 @@ unsigned long* count_freq(const unsigned long arr[], unsigned long n) {
     return freqs;
 }
 
-void generate_graph(int n, int nb_clusters, double p, double q, char *output) {
-    FILE *file = fopen(output,"w");
-    int *cl = calloc(n, sizeof(int));
-    for (int i = 0; i < n; i++){
-        cl[i] = randint(1,nb_clusters);
-    }
-    for (int i = 0; i < n - 1; i++){
-        for (int j = i + 1; j < n; j++){
-            if (cl[i] == cl[j]){
-                if (rand()/(double)RAND_MAX < p){
-                    fprintf (file, "%u %u\n", i, j);
-                }
-            } else if (rand()/(double)RAND_MAX < q) {
-                fprintf (file, "%u %u\n", i, j);
-            }
-        }
-    }
-    fclose (file);
-}
-
 void fisher_yates_shuffle(unsigned long *arr, unsigned long n) {
     unsigned long j, temp;
     for (int i= 0 ; i < n - 2; i++){

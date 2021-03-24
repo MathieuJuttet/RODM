@@ -1,5 +1,6 @@
 #include  "adjarray.h"
 #include <memory.h>
+#include  "generate_graph.h"
 
 unsigned long randint(unsigned long min, unsigned long max);
 unsigned long new_label(const unsigned long arr[], unsigned long n, adjlist* g, unsigned long u, unsigned long adj_labels[]);
