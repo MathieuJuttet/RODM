@@ -79,16 +79,18 @@ void label_propagation(adjlist* g, char *output) {
         for (i = 0; i < g->n; i++) {
             u = order[i];
             unsigned long n_adj = g->cd[u + 1] - g->cd[u];
-            unsigned long *adj_labels = malloc(n_adj*sizeof(unsigned long));
-            for (unsigned long k = 0; k < n_adj; k++) {
-                adj_labels[k] = g->labels[g->adj[g->cd[u] + k]];
+            if (n_adj > 0){
+                unsigned long *adj_labels = malloc(n_adj*sizeof(unsigned long));
+                for (unsigned long k = 0; k < n_adj; k++) {
+                    adj_labels[k] = g->labels[g->adj[g->cd[u] + k]];
+                }
+                unsigned long* freqs = count_freq(adj_labels, n_adj);
+                unsigned long new_lab = new_label(freqs, n_adj, g, u, adj_labels);
+                if (g->labels[u] != new_lab) {
+                    communities_changed = 1;
+                }
+                g->labels[u] = new_lab;
             }
-            unsigned long* freqs = count_freq(adj_labels, n_adj);
-            unsigned long new_lab = new_label(freqs, n_adj, g, u, adj_labels);
-            if (g->labels[u] != new_lab) {
-                communities_changed = 1;
-            }
-            g->labels[u] = new_lab;
         }
     } while (communities_changed);
 
